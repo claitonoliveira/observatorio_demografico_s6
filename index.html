@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Observatório Demográfico · IBGE Censo 2022</title>
+
+    <!-- Open Graph — card social profissional -->
+    <meta name="description" content="Observatório Demográfico: análise interativa dos dados populacionais do Censo Demográfico 2022 do IBGE. Explore população coletada, imputada e total por município e macrorregião.">
+    <meta property="og:type"        content="website">
+    <meta property="og:title"       content="Observatório Demográfico · IBGE Censo 2022">
+    <meta property="og:description" content="Explore os dados do Censo 2022 do IBGE: população por município, ranking dos mais populosos e distribuição por macrorregião — tudo diretamente no navegador via PyScript.">
+    <meta property="og:image"       content="/images/og-preview.png">
+
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+
+    <!-- Preconnect: elimina latência de handshake para origens críticas -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://pyscript.net">    
+
+    <!-- Folha de Estilos Principal -->
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- PyScript: WebAssembly Python no navegador -->
+    <script type="module" src="https://pyscript.net/releases/2026.3.1/core.js"></script>
+    <style>
+        py-config { display: none; }
+    </style>
+    <py-config>
+        packages = ["pandas"]
+    </py-config>
+</head>
+<body>
+
+    <!-- ===================================================
+         CABEÇALHO
+         =================================================== -->
+    <header>
+        <h1>Observatório Demográfico</h1>
+        <p>Análise de dados públicos do IBGE · Censo Demográfico 2022</p>
+    </header>
+
+    <!-- ===================================================
+         SEMANA 4: NAVEGAÇÃO POR ABAS (SPA)
+         Padrão WCAG 2.1 AA: role="tablist", role="tab",
+         aria-selected, aria-controls, tabindex gerenciado.
+         =================================================== -->
+    <nav class="nav-abas" role="tablist" aria-label="Visões do Observatório">
+        <button
+            id="tab-tabela"
+            role="tab"
+            aria-selected="true"
+            aria-controls="aba-tabela"
+            tabindex="0"
+            class="aba-ativa"
+        >Dados dos Municípios</button>
+
+        <button
+            id="tab-analitica"
+            role="tab"
+            aria-selected="false"
+            aria-controls="aba-analitica"
+            tabindex="-1"
+        >Visão Analítica</button>
+    </nav>
+
+    <!-- ===================================================
+         WRAPPER FLEXBOX: aside + main (painel + conteúdo)
+         =================================================== -->
+    <div class="layout-wrapper">
+
+        <!-- -----------------------------------------------
+             ASIDE — Painel de Filtros
+             ----------------------------------------------- -->
+        <aside>
+            <h2>Filtros de Pesquisa</h2>
+
+            <!-- Status: classes .status-sucesso/.status-erro/.status-carregando
+                 são injetadas pelo Python via classList — nunca inline styles -->
+            <p id="status-carregamento">
+                ⚙️ Inicializando Motor Python e WebAssembly… Por favor, aguarde.
+            </p>
+
+            <form>
+                <!-- Grupo 1: Seleção de UF -->
+                <div>
+                    <label for="filtro-uf">Filtrar por UF:</label>
+                    <select id="filtro-uf">
+                        <option value="TODOS">— Todos os Estados —</option>
+                        <option value="AC">Acre</option>
+                        <option value="AL">Alagoas</option>
+                        <option value="AP">Amapá</option>
+                        <option value="AM">Amazonas</option>
+                        <option value="BA">Bahia</option>
+                        <option value="CE">Ceará</option>
+                        <option value="DF">Distrito Federal</option>
+                        <option value="ES">Espírito Santo</option>
+                        <option value="GO">Goiás</option>
+                        <option value="MA">Maranhão</option>
+                        <option value="MT">Mato Grosso</option>
+                        <option value="MS">Mato Grosso do Sul</option>
+                        <option value="MG">Minas Gerais</option>
+                        <option value="PA">Pará</option>
+                        <option value="PB">Paraíba</option>
+                        <option value="PR">Paraná</option>
+                        <option value="PE">Pernambuco</option>
+                        <option value="PI">Piauí</option>
+                        <option value="RJ">Rio de Janeiro</option>
+                        <option value="RN">Rio Grande do Norte</option>
+                        <option value="RS">Rio Grande do Sul</option>
+                        <option value="RO">Rondônia</option>
+                        <option value="RR">Roraima</option>
+                        <option value="SC">Santa Catarina</option>
+                        <option value="SP">São Paulo</option>
+                        <option value="SE">Sergipe</option>
+                        <option value="TO">Tocantins</option>
+                    </select>
+                </div>
+
+                <!-- Grupo 2: Busca por Município (com autocomplete) -->
+                <div>
+                    <label for="busca-municipio">Buscar por Município:</label>
+                    <input
+                        type="text"
+                        id="busca-municipio"
+                        placeholder="Ex: Londrina, São Paulo…"
+                        autocomplete="off"
+                        list="lista-municipios"
+                    >
+                    <datalist id="lista-municipios"></datalist>
+                </div>
+
+                <!-- Grupo 3: Upload de Arquivo CSV -->
+                <div>
+                    <label for="upload-csv">Carregar arquivo *.csv:</label>
+                    <input type="file" id="upload-csv" accept=".csv">
+                </div>
+
+                <button type="button" id="btn-processar">Processar Dados</button>
+            </form>
+        </aside>
+
+        <!-- -----------------------------------------------
+             MAIN — Área de Resultados (painéis alternados)
+             ----------------------------------------------- -->
+        <main>
+            <h2>Painel de Indicadores Gerais</h2>
+
+            <!-- Cards de Métricas: visíveis em ambas as abas -->
+            <section class="secao-metricas">
+                <h3>Principais Métricas</h3>
+                <div class="cards-container">
+                    <article>
+                        <h4>População Coletada</h4>
+                        <p id="card-coletada">—</p>
+                    </article>
+                    <article>
+                        <h4>População Imputada</h4>
+                        <p id="card-imputada">—</p>
+                    </article>
+                    <article>
+                        <h4>População Total</h4>
+                        <p id="card-total">—</p>
+                    </article>
+                </div>
+            </section>
+
+            <!-- ===========================================
+                 ABA 1: DADOS DOS MUNICÍPIOS (padrão ativa)
+                 role="tabpanel" + aria-labelledby vinculam
+                 semanticamente ao botão #tab-tabela.
+                 =========================================== -->
+            <section
+                id="aba-tabela"
+                role="tabpanel"
+                aria-labelledby="tab-tabela"
+                class="view-panel"
+            >
+                <h3>Análise Detalhada por Município</h3>
+
+                <table>
+                    <caption>
+                        Tabela demográfica — população coletada, imputada e total por município.
+                        Exibindo 50 registros por página.
+                    </caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">UF</th>
+                            <th scope="col">Cód. Município</th>
+                            <th scope="col">Nome do Município</th>
+                            <th scope="col">Pop. Coletada</th>
+                            <th scope="col">Pop. Imputada</th>
+                            <th scope="col">Pop. Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dados-municipios">
+                        <tr>
+                            <td colspan="6">
+                                ⚠️ Carregue um arquivo CSV do Censo 2022 para ativar o painel.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Controles de Paginação -->
+                <div class="paginacao-container">
+                    <button type="button" id="btn-anterior" class="btn-paginacao" disabled>
+                        ← Anterior
+                    </button>
+                    <span id="indicador-pagina" class="indicador-pagina">Página — de —</span>
+                    <button type="button" id="btn-proximo" class="btn-paginacao" disabled>
+                        Próximo →
+                    </button>
+                </div>
+            </section>
+
+            <!-- ===========================================
+                 SEMANA 4 — ABA 2: VISÃO ANALÍTICA
+                 `hidden` nativo oculta do DOM e de leitores
+                 de tela. O Python remove/adiciona via
+                 removeAttribute("hidden") / setAttribute("hidden","").
+                 =========================================== -->
+            <section
+                id="aba-analitica"
+                role="tabpanel"
+                aria-labelledby="tab-analitica"
+                class="view-panel"
+                hidden
+            >
+                <h3>Visão Analítica — Gráficos CSS Puros</h3>
+
+                <!-- Grid de 2 colunas (desktop) / 1 coluna (mobile)
+                     definido inteiramente em style.css -->
+                <div class="grid-analitico">
+
+                    <!-- GRÁFICO 1: Top 5 Municípios mais populosos
+                         Barras horizontais via CSS custom property --bar-width
+                         injetada pelo Python com style.setProperty() -->
+                    <div class="card-grafico" id="container-top5">
+                        <h3 class="titulo-grafico" id="titulo-top5">Top 5 Municípios Mais Populosos</h3>
+                        <p class="legenda-grafico" id="legenda-top5">Baseado na Pop. Total · Filtros aplicados</p>
+                        <ul id="top5-lista" class="top5-lista" aria-label="Ranking dos 5 municípios mais populosos">
+                            <li class="top5-vazio">
+                                Processe os dados para visualizar o ranking.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- GRÁFICO 2: Heatmap de Macrorregiões
+                         Tiles com opacidade variável via --heat-opacity
+                         injetada pelo Python com style.setProperty() -->
+                    <div class="card-grafico" id="container-heatmap">
+                        <h3 class="titulo-grafico" id="titulo-heatmap">Distribuição por Macrorregião</h3>
+                        <p class="legenda-grafico" id="legenda-heatmap">Intensidade proporcional à participação no total</p>
+                        <div
+                            id="regioes-grid"
+                            class="grid-regioes"
+                            aria-label="Mapa de calor das macrorregiões brasileiras"
+                        >
+                            <div class="regiao-vazia">
+                                Processe os dados para visualizar o heatmap.
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- fim .grid-analitico -->
+            </section>
+
+        </main>
+    </div><!-- fim .layout-wrapper -->
+
+    <!-- ===================================================
+         RODAPÉ
+         =================================================== -->
+    <footer>
+        <p>
+            Fonte: Dados públicos extraídos do
+            <a
+                href="https://ftp.ibge.gov.br/Censos/Censo_Demografico_2022/Populacao_e_domicilios_Primeiros_resultados/Resultados_da_2a_apuracao_20231027/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-rodape"
+            >Censo Demográfico 2022 — IBGE</a>
+            · Diretoria de Pesquisas (DPE) · Coordenação Técnica do Censo (CTD)
+        </p>
+    </footer>
+
+    <!-- Engine Python (PyScript / WebAssembly) -->
+    <py-script type="py" src="main.py"></py-script>
+
+</body>
+</html>

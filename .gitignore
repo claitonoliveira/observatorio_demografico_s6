@@ -1,0 +1,10 @@
+# Ignora a pasta de dados locais (privacidade + tamanho do repo)
+data/
+
+# Ignora cache e arquivos temporários do VS Code
+.vscode/
+*.log
+
+# Ignora ambientes virtuais Python (não usados aqui, mas boa prática)
+venv/
+__pycache__/

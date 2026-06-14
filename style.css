@@ -1,0 +1,1025 @@
+/* ==========================================================
+   OBSERVATÓRIO DEMOGRÁFICO — style.css
+   Semana 3: Fundamentos CSS · Box Model · Flexbox · Tabelas
+   Semana 4: SPA · Abas ARIA · Gráficos CSS Puros · Heatmap
+   ========================================================== */
+
+/* ----------------------------------------------------------
+   2. CUSTOM PROPERTIES — IDENTIDADE VISUAL
+   Paleta: Azul-petróleo institucional + neutros escuros.
+   SEMANA 4: adicionadas variáveis de fallback para os
+   gráficos CSS alimentados pelo Python.
+   ---------------------------------------------------------- */
+:root {
+  /* Cores Primárias */
+  --cor-fundo:         #0d1117;
+  --cor-superficie:    #161b22;
+  --cor-borda:         #21262d;
+  --cor-borda-suave:   #30363d;
+
+  /* Azul-Petróleo (accent principal) */
+  --cor-accent:        #1f6feb;
+  --cor-accent-hover:  #388bfd;
+  --cor-accent-suave:  rgba(31, 111, 235, 0.15);
+
+  /* Tipografia */
+  --cor-texto-primario:   #e6edf3;
+  --cor-texto-secundario: #8b949e;
+  --cor-texto-terciario:  #788591;
+
+  /* Status */
+  --cor-sucesso:       #238636;
+  --cor-sucesso-bg:    rgba(35, 134, 54, 0.15);
+  --cor-sucesso-borda: rgba(35, 134, 54, 0.4);
+  --cor-erro:          #da3633;
+  --cor-erro-bg:       rgba(218, 54, 51, 0.15);
+  --cor-erro-borda:    rgba(218, 54, 51, 0.4);
+  --cor-aviso:         #d29922;
+  --cor-aviso-bg:      rgba(210, 153, 34, 0.12);
+  --cor-aviso-borda:   rgba(210, 153, 34, 0.4);
+
+  /* Métricas / Cards */
+  --cor-card-1:        #8957e5;
+  --cor-card-2:        #1f6feb;
+  --cor-card-3:        #238636;
+
+  /* Tipografia */
+  --fonte-display:  'Playfair Display', Georgia, serif;
+  --fonte-corpo:    'Source Sans 3', 'Helvetica Neue', sans-serif;
+  --fonte-mono:     'JetBrains Mono', 'Courier New', monospace;
+
+  /* Espaçamentos */
+  --espaco-xs:  4px;
+  --espaco-sm:  8px;
+  --espaco-md:  16px;
+  --espaco-lg:  24px;
+  --espaco-xl:  32px;
+  --espaco-2xl: 48px;
+
+  /* Bordas */
+  --raio-sm:    4px;
+  --raio-md:    8px;
+  --raio-lg:    12px;
+
+  /* Sombras */
+  --sombra-card:  0 4px 24px rgba(0, 0, 0, 0.4);
+  --sombra-hover: 0 8px 32px rgba(31, 111, 235, 0.2);
+
+  /* Transições globais */
+  --transicao: 200ms ease;
+
+  /* ----------------------------------------------------------
+     SEMANA 4: Variáveis de fallback para gráficos CSS puros.
+     O Python injeta valores reais via element.style.setProperty().
+     Manter aqui garante que o CSS funcione sem JS ativo.
+     ---------------------------------------------------------- */
+  --bar-width:       0%;          /* Largura das barras do Top 5        */
+  --bar-transition:  0.6s cubic-bezier(0.4, 0, 0.2, 1); /* Easing suave */
+}
+
+/* ----------------------------------------------------------
+   3. RESET & BASE — BOX MODEL UNIVERSAL
+   box-sizing: border-box → border + padding ficam DENTRO
+   da largura declarada (não somam por fora).
+   ---------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--fonte-corpo);
+  font-weight: 400;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--cor-texto-primario);
+  background-color: var(--cor-fundo);
+
+  /* Coluna vertical: header → nav → content → footer */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ----------------------------------------------------------
+   4. HEADER
+   ---------------------------------------------------------- */
+header {
+  background-color: var(--cor-superficie);
+  border-bottom: 1px solid var(--cor-borda);
+  border-top: 3px solid var(--cor-accent);
+  padding: var(--espaco-lg) var(--espaco-2xl);
+}
+
+header h1 {
+  font-family: var(--fonte-display);
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--cor-texto-primario);
+  line-height: 1.1;
+}
+
+header p {
+  margin-top: var(--espaco-xs);
+  font-size: 0.8125rem;
+  font-weight: 300;
+  color: var(--cor-texto-secundario);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ----------------------------------------------------------
+   SEMANA 4 — 4B. NAVEGAÇÃO POR ABAS (SPA)
+   Flex row com borda inferior que conecta visualmente
+   ao conteúdo. A aba ativa recebe .aba-ativa (injetado
+   pelo Python via classList).
+   ---------------------------------------------------------- */
+.nav-abas {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 0;
+  background-color: var(--cor-superficie);
+  border-bottom: 1px solid var(--cor-borda);
+  padding: 0 var(--espaco-2xl);
+}
+
+/* Botão de aba: estado base */
+.nav-abas button[role="tab"] {
+  /* Reset de botão */
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--fonte-corpo);
+
+  /* Espaçamento: padding vertical cria a área clicável */
+  padding: var(--espaco-md) var(--espaco-lg);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cor-texto-secundario);
+
+  /* Borda inferior invisível reserva espaço para o estado ativo */
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px; /* sobrepõe a borda do container */
+
+  transition:
+    color var(--transicao),
+    border-color var(--transicao);
+
+  /* Foco acessível via teclado */
+  outline: none;
+}
+
+.nav-abas button[role="tab"]:hover {
+  color: var(--cor-texto-primario);
+  border-bottom-color: var(--cor-borda-suave);
+}
+
+/* Aba ativa: classe injetada pelo Python via classList.add("aba-ativa") */
+.nav-abas button[role="tab"].aba-ativa,
+.nav-abas button[role="tab"][aria-selected="true"] {
+  color: var(--cor-texto-primario);
+  border-bottom-color: var(--cor-accent);
+}
+
+/* Foco via teclado (acessibilidade) */
+.nav-abas button[role="tab"]:focus-visible {
+  outline: 2px solid var(--cor-accent);
+  outline-offset: -2px;
+  border-radius: var(--raio-sm) var(--raio-sm) 0 0;
+}
+
+/* ----------------------------------------------------------
+   5. LAYOUT FLEXBOX PRINCIPAL — aside + main lado a lado
+   ---------------------------------------------------------- */
+.layout-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0;
+  flex: 1;
+}
+
+/* ----------------------------------------------------------
+   6. ASIDE — PAINEL DE FILTROS
+   ---------------------------------------------------------- */
+aside {
+  width: 280px;
+  flex-shrink: 0;
+  background-color: var(--cor-superficie);
+  border-right: 1px solid var(--cor-borda);
+  padding: var(--espaco-xl) var(--espaco-lg);
+  position: sticky;
+  top: 0;
+  min-height: calc(100vh - 110px); /* desconta header + nav abas */
+  align-self: flex-start;
+}
+
+aside h2 {
+  font-family: var(--fonte-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--cor-texto-primario);
+  margin-bottom: var(--espaco-lg);
+  padding-bottom: var(--espaco-sm);
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+/* ----------------------------------------------------------
+   7. STATUS DE CARREGAMENTO
+   Classes injetadas pelo Python via classList.add():
+     .status-carregando → azul pulsante
+     .status-sucesso    → verde
+     .status-erro       → vermelho
+     (sem classe)       → âmbar (estado inicial)
+   ---------------------------------------------------------- */
+#status-carregamento {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.5;
+  padding: var(--espaco-sm) var(--espaco-md);
+  border-radius: var(--raio-md);
+  border: 1px solid var(--cor-aviso-borda);
+  background-color: var(--cor-aviso-bg);
+  color: var(--cor-aviso);
+  margin-bottom: var(--espaco-lg);
+  transition:
+    background-color var(--transicao),
+    border-color var(--transicao),
+    color var(--transicao);
+}
+
+#status-carregamento.status-sucesso {
+  background-color: var(--cor-sucesso-bg);
+  border-color: var(--cor-sucesso-borda);
+  color: #3fb950;
+}
+
+#status-carregamento.status-erro {
+  background-color: var(--cor-erro-bg);
+  border-color: var(--cor-erro-borda);
+  color: #f85149;
+}
+
+#status-carregamento.status-carregando {
+  background-color: var(--cor-accent-suave);
+  border-color: rgba(31, 111, 235, 0.4);
+  color: var(--cor-accent-hover);
+  animation: pulso 1.5s ease-in-out infinite;
+}
+
+@keyframes pulso {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+/* ----------------------------------------------------------
+   8. FORMULÁRIO — Inputs, Select e Botão
+   ---------------------------------------------------------- */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-md);
+}
+
+form > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-xs);
+}
+
+label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cor-texto-secundario);
+}
+
+/* Box Model: padding + borda ficam dentro dos 100% (border-box) */
+select,
+input[type="text"],
+input[type="file"] {
+  width: 100%;
+  padding: var(--espaco-sm) var(--espaco-md);
+  background-color: var(--cor-fundo);
+  border: 1px solid var(--cor-borda-suave);
+  border-radius: var(--raio-md);
+  color: var(--cor-texto-primario);
+  font-family: var(--fonte-corpo);
+  font-size: 0.875rem;
+  transition: border-color var(--transicao), box-shadow var(--transicao);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238b949e' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+select:focus,
+input[type="text"]:focus {
+  border-color: var(--cor-accent);
+  box-shadow: 0 0 0 3px var(--cor-accent-suave);
+}
+
+select:hover,
+input[type="text"]:hover {
+  border-color: var(--cor-texto-terciario);
+}
+
+input[type="file"] {
+  cursor: pointer;
+  padding: var(--espaco-sm);
+  font-size: 0.8125rem;
+  color: var(--cor-texto-secundario);
+}
+
+input[type="file"]::file-selector-button {
+  background-color: var(--cor-borda-suave);
+  color: var(--cor-texto-primario);
+  border: none;
+  padding: 4px 10px;
+  border-radius: var(--raio-sm);
+  font-family: var(--fonte-corpo);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  margin-right: var(--espaco-sm);
+  transition: background-color var(--transicao);
+}
+
+input[type="file"]::file-selector-button:hover {
+  background-color: var(--cor-accent);
+}
+
+/* Botão Principal */
+#btn-processar {
+  margin-top: var(--espaco-sm);
+  width: 100%;
+  padding: var(--espaco-sm) var(--espaco-md);
+  background-color: var(--cor-accent);
+  color: #fff;
+  font-family: var(--fonte-corpo);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: var(--raio-md);
+  cursor: pointer;
+  transition:
+    background-color var(--transicao),
+    box-shadow var(--transicao),
+    transform var(--transicao);
+}
+
+#btn-processar:hover {
+  background-color: var(--cor-accent-hover);
+  box-shadow: var(--sombra-hover);
+  transform: translateY(-1px);
+}
+
+#btn-processar:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* .processando injetado pelo Python: desabilita visualmente */
+#btn-processar.processando {
+  background-color: var(--cor-texto-terciario);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ----------------------------------------------------------
+   9. MAIN — ÁREA DE RESULTADOS
+   ---------------------------------------------------------- */
+main {
+  flex: 1;
+  padding: var(--espaco-xl) var(--espaco-2xl);
+  overflow-x: auto;
+}
+
+main > h2 {
+  font-family: var(--fonte-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--cor-texto-primario);
+  margin-bottom: var(--espaco-xl);
+  padding-bottom: var(--espaco-md);
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+/* ----------------------------------------------------------
+   10. SEÇÕES DO MAIN
+   ---------------------------------------------------------- */
+main > section,
+main > .secao-metricas {
+  margin-bottom: var(--espaco-2xl);
+}
+
+main > section > h3,
+main > .secao-metricas > h3,
+.view-panel > h3 {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--cor-texto-secundario);
+  margin-bottom: var(--espaco-lg);
+}
+
+/* ----------------------------------------------------------
+   11. CARDS DE MÉTRICAS — Flexbox horizontal
+   ---------------------------------------------------------- */
+.cards-container {
+  display: flex;
+  flex-direction: row;
+  gap: var(--espaco-md);
+  flex-wrap: wrap;
+}
+
+article {
+  flex: 1;
+  min-width: 160px;
+  background-color: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-lg);
+  padding: var(--espaco-lg);
+  box-shadow: var(--sombra-card);
+  transition: transform var(--transicao), box-shadow var(--transicao);
+  position: relative;
+  overflow: hidden;
+}
+
+article::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+
+article:nth-child(1)::before { background-color: var(--cor-card-1); }
+article:nth-child(2)::before { background-color: var(--cor-card-2); }
+article:nth-child(3)::before { background-color: var(--cor-card-3); }
+
+article:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sombra-hover);
+}
+
+article h4 {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--cor-texto-secundario);
+  margin-bottom: var(--espaco-sm);
+}
+
+article p {
+  font-family: var(--fonte-mono);
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+article:nth-child(1) p { color: #d2a8ff; }
+article:nth-child(2) p { color: #1f6feb; }
+article:nth-child(3) p { color: #3fb950; }
+
+/* .atualizando → animação de piscar quando Python atualiza valores */
+article.atualizando p {
+  opacity: 0.4;
+  animation: pisca 0.5s ease-in-out 2;
+}
+
+@keyframes pisca {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 1; }
+}
+
+/* ----------------------------------------------------------
+   SEMANA 4 — 11B. PAINÉIS DE ABAS (view-panel)
+   Técnica: visibility + opacity (não display:none) preserva
+   o layout para calcular animações e não gera reflow violento.
+   O atributo `hidden` nativo do HTML oculta de leitores de tela.
+   ---------------------------------------------------------- */
+.view-panel {
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Painel oculto: [hidden] é seletor do atributo HTML nativo */
+.view-panel[hidden] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;   /* bloqueia cliques mesmo com visibility */
+
+  /*
+   * IMPORTANTE: `display: none` removeria o elemento do layout,
+   * quebrando transições. Usamos visibility+opacity para suavidade,
+   * e o atributo `hidden` do HTML cuida da semântica/acessibilidade.
+   * O Python remove/adiciona o atributo, não uma classe.
+   */
+  display: none;
+}
+
+/* ----------------------------------------------------------
+   12. TABELA EXECUTIVA — Zebra Striping + Hover
+   ---------------------------------------------------------- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  background-color: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-lg);
+  overflow: hidden;
+  box-shadow: var(--sombra-card);
+}
+
+caption {
+  caption-side: bottom;
+  padding: var(--espaco-sm) var(--espaco-md);
+  font-size: 0.75rem;
+  color: var(--cor-texto-terciario);
+  text-align: left;
+  font-style: italic;
+}
+
+thead {
+  background-color: var(--cor-fundo);
+  border-bottom: 2px solid var(--cor-accent);
+}
+
+thead th {
+  padding: var(--espaco-md) var(--espaco-lg);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--cor-texto-secundario);
+  text-align: left;
+  white-space: nowrap;
+}
+
+thead th:nth-child(4),
+thead th:nth-child(5),
+thead th:nth-child(6) {
+  text-align: right;
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--cor-borda);
+  transition: background-color var(--transicao);
+}
+
+/* ZEBRA STRIPING */
+tbody tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+tbody tr:hover {
+  background-color: var(--cor-accent-suave);
+  cursor: default;
+}
+
+tbody td {
+  padding: var(--espaco-sm) var(--espaco-lg);
+  color: var(--cor-texto-primario);
+  vertical-align: middle;
+}
+
+tbody td:nth-child(1) {
+  font-family: var(--fonte-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--cor-accent-hover);
+  letter-spacing: 0.04em;
+}
+
+tbody td:nth-child(2) {
+  font-family: var(--fonte-mono);
+  font-size: 0.8125rem;
+  color: var(--cor-texto-secundario);
+}
+
+tbody td:nth-child(4),
+tbody td:nth-child(5),
+tbody td:nth-child(6) {
+  text-align: right;
+  font-family: var(--fonte-mono);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+tbody td:nth-child(6) {
+  color: #3fb950;
+  font-weight: 600;
+}
+
+tbody td[colspan] {
+  text-align: center;
+  padding: var(--espaco-2xl);
+  color: var(--cor-texto-secundario);
+  font-style: italic;
+}
+
+/* ----------------------------------------------------------
+   13. PAGINAÇÃO
+   Migrado de inline styles para classes CSS (princípio da
+   separação lógica/apresentação).
+   ---------------------------------------------------------- */
+.paginacao-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--espaco-md);
+  padding: 0 var(--espaco-sm);
+}
+
+.btn-paginacao {
+  padding: var(--espaco-xs) var(--espaco-md);
+  background-color: var(--cor-superficie);
+  border: 1px solid var(--cor-borda-suave);
+  color: var(--cor-texto-secundario);
+  border-radius: var(--raio-md);
+  font-family: var(--fonte-corpo);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--transicao),
+    border-color var(--transicao),
+    color var(--transicao),
+    opacity var(--transicao);
+}
+
+.btn-paginacao:hover:not(:disabled) {
+  background-color: var(--cor-accent-suave);
+  border-color: var(--cor-accent);
+  color: var(--cor-texto-primario);
+}
+
+.btn-paginacao:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.indicador-pagina {
+  font-family: var(--fonte-mono);
+  font-size: 0.8125rem;
+  color: var(--cor-texto-secundario);
+}
+
+/* ----------------------------------------------------------
+   SEMANA 4 — 14. GRID ANALÍTICO
+   Layout de 2 colunas no desktop, 1 coluna no mobile.
+   Sem media query explícita: auto-fit do Grid faz o trabalho.
+   ---------------------------------------------------------- */
+.grid-analitico {
+  display: grid;
+  grid-template-columns: 1fr;          /* mobile-first: 1 coluna */
+  gap: var(--espaco-lg);
+}
+
+/* Desktop: 2fr para o gráfico de barras, 1fr para o heatmap */
+@media (min-width: 900px) {
+  .grid-analitico {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+/* ----------------------------------------------------------
+   SEMANA 4 — 15. CARD DE GRÁFICO (container base)
+   ---------------------------------------------------------- */
+.card-grafico {
+  background-color: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-lg);
+  padding: var(--espaco-lg);
+  box-shadow: var(--sombra-card);
+}
+
+.titulo-grafico {
+  font-family: var(--fonte-display);
+  font-size: 1rem !important;          /* sobrepõe o h3 genérico do main */
+  font-weight: 700 !important;
+  color: var(--cor-texto-primario) !important;
+  text-transform: none !important;
+  letter-spacing: -0.01em !important;
+  margin-bottom: var(--espaco-xs) !important;
+}
+
+.legenda-grafico {
+  font-size: 0.75rem;
+  color: var(--cor-texto-terciario);
+  margin-bottom: var(--espaco-lg);
+  font-style: italic;
+}
+
+/* ----------------------------------------------------------
+   SEMANA 4 — 16. GRÁFICO DE BARRAS — Top 5 Municípios
+   Barras horizontais 100% CSS.
+   Largura controlada via custom property --bar-width,
+   injetada pelo Python com element.style.setProperty().
+   ---------------------------------------------------------- */
+.top5-lista {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-md);
+}
+
+/* Item do ranking: label + barra em linha */
+.top5-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-xs);
+}
+
+/* Linha superior: posição + nome do município + valor */
+.top5-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--espaco-sm);
+}
+
+.top5-posicao {
+  font-family: var(--fonte-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--cor-accent-hover);
+  min-width: 20px;
+}
+
+.top5-nome {
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cor-texto-primario);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top5-valor {
+  font-family: var(--fonte-mono);
+  font-size: 0.8125rem;
+  color: var(--cor-texto-secundario);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* A BARRA: largura = var(--bar-width), animação no grow */
+.barra-container {
+  width: 100%;
+  height: 10px;
+  background-color: var(--cor-borda);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.barra {
+  height: 100%;
+  width: var(--bar-width, 0%);   /* fallback 0% se Python ainda não injetou */
+  background: linear-gradient(
+    90deg,
+    var(--cor-accent) 0%,
+    var(--cor-accent-hover) 100%
+  );
+  border-radius: 99px;
+  transition: width var(--bar-transition, 0.6s cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+/* 1º Lugar (Maior População) — Roxo Neon / Pico Máximo de Dados */
+.top5-item:first-child .barra {
+  background: linear-gradient(90deg, #8a2be2 0%, #4a00e0 100%);
+}
+
+/* 2º Lugar — Azul Royal Intenso / Transição Fluida */
+.top5-item:nth-child(2) .barra { 
+  background: linear-gradient(90deg, #1f6feb 0%, #0044ff 100%); 
+}
+
+/* 3º Lugar — Azul-Piscina / Ciano Vibrante */
+.top5-item:nth-child(3) .barra { 
+  background: linear-gradient(90deg, #00bdcd 0%, #008194 100%); 
+}
+
+/* 4º Lugar — Verde Esmeralda Tecnológico */
+.top5-item:nth-child(4) .barra { 
+  background: linear-gradient(90deg, #00b074 0%, #006b44 100%); 
+}
+
+/* 5º Lugar — Verde Musgo Fechado / Suave */
+.top5-item:nth-child(5) .barra { 
+  background: linear-gradient(90deg, #387c44 0%, #1e4b25 100%); 
+}
+
+/* Estado vazio */
+.top5-vazio {
+  color: var(--cor-texto-terciario);
+  font-style: italic;
+  font-size: 0.875rem;
+  padding: var(--espaco-lg) 0;
+  text-align: center;
+}
+
+/* ----------------------------------------------------------
+   SEMANA 4 — 17. HEATMAP DE MACRORREGIÕES
+   Python calcula % e injeta via style.setProperty().
+   ---------------------------------------------------------- */
+.grid-regioes {
+  display: grid;
+  /* auto-fit: encaixa o máximo de colunas de 120px sem media query */
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--espaco-md);
+}
+
+.tile-regiao {
+  aspect-ratio: 1 / 0.75;            /* proporção retangular horizontal */
+  background: linear-gradient(
+    135deg,
+    var(--cor-accent) 0%,
+    rgba(31, 111, 235, 0.3) 60%,
+    var(--cor-fundo) 100%
+  );
+  border-radius: var(--raio-md);
+  border: 1px solid var(--cor-borda);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espaco-xs);
+  cursor: default;
+  transition:
+    transform var(--transicao);
+}
+
+/* 1º Lugar (Maior População) — Roxo Neon / Pico de Dados */
+.tile-regiao:first-child { 
+  background: linear-gradient(90deg, #8a2be2 0%, #4a00e0 100%); 
+}
+
+/* 2º Lugar — Azul Royal Intenso (A ponte perfeita com o resto do site) */
+.tile-regiao:nth-child(2) { 
+  background: linear-gradient(90deg, #1f6feb 0%, #0044ff 100%); 
+}
+
+/* 3º Lugar — Azul-Piscina / Ciano */
+.tile-regiao:nth-child(3) { 
+  background: linear-gradient(90deg, #00bdcd 0%, #008194 100%); 
+}
+
+/* 4º Lugar — Verde-Esmeralda / Transição para o frio */
+.tile-regiao:nth-child(4) { 
+  background: linear-gradient(90deg, #00b074 0%, #006b44 100%); 
+}
+
+/* 5º Lugar — Verde-Musgo Escuro / Sutil */
+.tile-regiao:nth-child(5) { 
+  background: linear-gradient(90deg, #387c44 0%, #1e4b25 100%); 
+}
+
+.tile-regiao:hover {
+  transform: scale(1.04);
+}
+
+.tile-regiao-nome {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cor-texto-primario);
+  text-align: center;
+}
+
+.tile-regiao-pct {
+  font-family: var(--fonte-mono);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1;
+}
+
+/* Estado vazio do heatmap */
+.regiao-vazia {
+  grid-column: 1 / -1;              /* ocupa todas as colunas */
+  color: var(--cor-texto-terciario);
+  font-style: italic;
+  font-size: 0.875rem;
+  padding: var(--espaco-lg) 0;
+  text-align: center;
+}
+
+/* ----------------------------------------------------------
+   18. FOOTER
+   ---------------------------------------------------------- */
+footer {
+  background-color: var(--cor-superficie);
+  border-top: 1px solid var(--cor-borda);
+  padding: var(--espaco-md) var(--espaco-2xl);
+}
+
+footer p {
+  font-size: 0.75rem;
+  color: var(--cor-texto-terciario);
+}
+
+footer a,
+footer a.link-rodape {
+  color: var(--cor-accent-hover);
+  text-decoration: underline;         /* Corrige falha WCAG: link não pode depender só de cor */
+  text-underline-offset: 3px;
+  transition: color var(--transicao);
+}
+
+footer a:hover {
+  color: var(--cor-texto-primario);
+  text-decoration: underline;
+}
+
+/* ----------------------------------------------------------
+   19. SCROLLBAR CUSTOMIZADA
+   ---------------------------------------------------------- */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--cor-fundo); }
+::-webkit-scrollbar-thumb {
+  background: var(--cor-borda-suave);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--cor-texto-terciario); }
+
+/* ----------------------------------------------------------
+   20. SELEÇÃO DE TEXTO
+   ---------------------------------------------------------- */
+::selection {
+  background-color: var(--cor-accent);
+  color: #fff;
+}
+
+/* ----------------------------------------------------------
+   21. RESPONSIVIDADE — breakpoint 900px
+   ---------------------------------------------------------- */
+@media (max-width: 900px) {
+  .layout-wrapper {
+    flex-direction: column;
+  }
+
+  aside {
+    width: 100%;
+    position: static;
+    min-height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--cor-borda);
+  }
+
+  header { padding: var(--espaco-md); }
+  header h1 { font-size: 1.5rem; }
+
+  .nav-abas { padding: 0 var(--espaco-md); }
+
+  main { padding: var(--espaco-lg); }
+
+  .cards-container { flex-direction: column; }
+  article { min-width: unset; }
+}
+
+/* ----------------------------------------------------------
+   SEMANA 4 — 22. ACESSIBILIDADE: prefers-reduced-motion
+   Usuários que configuram o SO para "reduzir movimento"
+   (epilepsia, vertigem) têm TODAS as animações desligadas.
+   !important garante precedência sobre qualquer outra regra.
+   ---------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
